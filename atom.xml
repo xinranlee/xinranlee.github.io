@@ -5,7 +5,7 @@
   <link href="/atom.xml" rel="self"/>
   
   <link href="http://yoursite.com/"/>
-  <updated>2016-05-17T06:27:03.000Z</updated>
+  <updated>2016-05-18T07:05:26.000Z</updated>
   <id>http://yoursite.com/</id>
   
   <author>
@@ -14,6 +14,50 @@
   </author>
   
   <generator uri="http://hexo.io/">Hexo</generator>
+  
+  <entry>
+    <title>如何取出一个时间段的日志</title>
+    <link href="http://yoursite.com/2016/05/18/bash/log/"/>
+    <id>http://yoursite.com/2016/05/18/bash/log/</id>
+    <published>2016-05-18T04:09:43.000Z</published>
+    <updated>2016-05-18T07:05:26.000Z</updated>
+    
+    <content type="html">&lt;p&gt;分析线上问题，需要取出一个时间段的日志，以下逐步给出一个脚本，取出一个时间段的日志。&lt;/p&gt;
+&lt;a id=&quot;more&quot;&gt;&lt;/a&gt;
+&lt;blockquote&gt;
+&lt;p&gt;给出如下格式的日志记录，查询给定时间段的日志&lt;/p&gt;
+&lt;figure class=&quot;highlight plain&quot;&gt;&lt;table&gt;&lt;tr&gt;&lt;td class=&quot;gutter&quot;&gt;&lt;pre&gt;&lt;span class=&quot;line&quot;&gt;1&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;2&lt;/span&gt;&lt;br&gt;&lt;/pre&gt;&lt;/td&gt;&lt;td class=&quot;code&quot;&gt;&lt;pre&gt;&lt;span class=&quot;line&quot;&gt;INFO  - 2016-04-21 21:01:04.139; org.apache.solr.core.SolrCore; [mtarm_solr_poi_collection] webapp=/solr path=/select params=&amp;#123;q=*:*&amp;amp;fl=g_id&amp;amp;fq=(*:*)+AND+((*:*)+AND+(category_id_is:(226+OR+390+OR+450))+AND+(poi_name_ik:&amp;quot;麦&amp;quot;)+AND+(orgunit_id_i:1417)+AND+(&amp;#123;!geofilt+score%3Ddistance+filter%3Dfalse+sfield%3Dgeo_location_loc+pt%3D32.043549,118.765998+d%3D20&amp;#125;)+AND+(merge_id_i:0))&amp;amp;fq=tenant_id:1&amp;amp;fq=object_id:1&amp;amp;wt=javabin&amp;amp;version=2&amp;#125; hits=160 status=0 QTime=16302&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;INFO  - 2016-04-21 21:04:15.480; org.apache.solr.core.SolrCore; [mtarm_solr_poi_collection] webapp=/solr path=/select params=&amp;#123;df=message&amp;amp;distrib=false&amp;amp;fl=g_id&amp;amp;start=0&amp;amp;fsv=true&amp;amp;sort=biz_id+desc&amp;amp;fq=(*:*)+AND+((*:*)+AND+(category_id_is:(226+OR+390+OR+450))+AND+(poi_name_ik:&amp;quot;九品&amp;quot;)+AND+(orgunit_id_i:458)+AND+(&amp;#123;!geofilt+score%3Ddistance+filter%3Dfalse+sfield%3Dgeo_location_loc+pt%3D31.739929,119.598432+d%3D20&amp;#125;)+AND+(merge_id_i:0))&amp;amp;fq=tenant_id:1&amp;amp;fq=object_id:1&amp;amp;shard.url=http://10.32.162.177:8983/solr/mtarm_solr_poi_collection/|http://10.32.56.171:8983/solr/mtarm_solr_poi_collection/&amp;amp;rows=10&amp;amp;version=2&amp;amp;q=*:*&amp;amp;NOW=1461243824206&amp;amp;isShard=true&amp;amp;wt=javabin&amp;#125; hits=2 status=0 QTime=31253&lt;/span&gt;&lt;br&gt;&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;&lt;/figure&gt;
+&lt;p&gt;思路是：&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;首先取出时间戳，转换为&lt;code&gt;unix timestamp&lt;/code&gt;；&lt;/li&gt;
+&lt;li&gt;将&lt;code&gt;unix timestamp&lt;/code&gt; 补充到日志的前边&lt;/li&gt;
+&lt;li&gt;用&lt;code&gt;awk&lt;/code&gt;取出指定时间段的日志&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/blockquote&gt;
+&lt;h2 id=&quot;时间解析&quot;&gt;&lt;a href=&quot;#时间解析&quot; class=&quot;headerlink&quot; title=&quot;时间解析&quot;&gt;&lt;/a&gt;时间解析&lt;/h2&gt;&lt;p&gt;&lt;code&gt;bash&lt;/code&gt;的&lt;code&gt;date&lt;/code&gt;命令，可以将一个时间字符串解析为&lt;code&gt;unix&lt;/code&gt;时间戳。&lt;/p&gt;
+&lt;figure class=&quot;highlight bash&quot;&gt;&lt;table&gt;&lt;tr&gt;&lt;td class=&quot;gutter&quot;&gt;&lt;pre&gt;&lt;span class=&quot;line&quot;&gt;1&lt;/span&gt;&lt;br&gt;&lt;/pre&gt;&lt;/td&gt;&lt;td class=&quot;code&quot;&gt;&lt;pre&gt;&lt;span class=&quot;line&quot;&gt;date -j &lt;span class=&quot;_&quot;&gt;-f&lt;/span&gt; &lt;span class=&quot;string&quot;&gt;&quot;%Y-%m-%d %H:%M:%S&quot;&lt;/span&gt; &lt;span class=&quot;string&quot;&gt;&quot;2016-05-08 00:21:34&quot;&lt;/span&gt; &lt;span class=&quot;string&quot;&gt;&quot;+%s&quot;&lt;/span&gt;&lt;/span&gt;&lt;br&gt;&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;&lt;/figure&gt;
+&lt;p&gt;输出：&lt;/p&gt;
+&lt;figure class=&quot;highlight bash&quot;&gt;&lt;table&gt;&lt;tr&gt;&lt;td class=&quot;gutter&quot;&gt;&lt;pre&gt;&lt;span class=&quot;line&quot;&gt;1&lt;/span&gt;&lt;br&gt;&lt;/pre&gt;&lt;/td&gt;&lt;td class=&quot;code&quot;&gt;&lt;pre&gt;&lt;span class=&quot;line&quot;&gt;1462638094&lt;/span&gt;&lt;br&gt;&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;&lt;/figure&gt;
+&lt;h2 id=&quot;时间抽取&quot;&gt;&lt;a href=&quot;#时间抽取&quot; class=&quot;headerlink&quot; title=&quot;时间抽取&quot;&gt;&lt;/a&gt;时间抽取&lt;/h2&gt;&lt;p&gt;&lt;code&gt;sed&lt;/code&gt;可以取出匹配的信息&lt;/p&gt;
+&lt;figure class=&quot;highlight bash&quot;&gt;&lt;table&gt;&lt;tr&gt;&lt;td class=&quot;gutter&quot;&gt;&lt;pre&gt;&lt;span class=&quot;line&quot;&gt;1&lt;/span&gt;&lt;br&gt;&lt;/pre&gt;&lt;/td&gt;&lt;td class=&quot;code&quot;&gt;&lt;pre&gt;&lt;span class=&quot;line&quot;&gt;cat your.log | sed &lt;span class=&quot;string&quot;&gt;&quot;s/.*\([0-9][0-9][0-9][0-9]-[0-9]*-[0-9]* [0-9]*:[0-9]*:[0-9]*\)\.[0-9]*;.*/\1/&quot;&lt;/span&gt;&lt;/span&gt;&lt;br&gt;&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;&lt;/figure&gt;
+&lt;p&gt;可以将上边两个命令结合起来&lt;/p&gt;
+&lt;figure class=&quot;highlight plain&quot;&gt;&lt;table&gt;&lt;tr&gt;&lt;td class=&quot;gutter&quot;&gt;&lt;pre&gt;&lt;span class=&quot;line&quot;&gt;1&lt;/span&gt;&lt;br&gt;&lt;/pre&gt;&lt;/td&gt;&lt;td class=&quot;code&quot;&gt;&lt;pre&gt;&lt;span class=&quot;line&quot;&gt;cat your.log | sed &amp;quot;s/.*\([0-9][0-9][0-9][0-9]-[0-9]*-[0-9]* [0-9]*:[0-9]*:[0-9]*\)\.[0-9]*;.*/$(date -j -f &amp;quot;%Y-%m-%d %H:%M:%S&amp;quot; \\1 &amp;quot;+%s&amp;quot;)/&amp;quot;&lt;/span&gt;&lt;br&gt;&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;&lt;/figure&gt;
+&lt;p&gt;上边命令在&lt;code&gt;Mac OSX 10.10.5&lt;/code&gt;上运行时会报错的。&lt;br&gt;正确的处理是将日期转换单独出来，做一个命令。&lt;/p&gt;
+&lt;figure class=&quot;highlight bash&quot;&gt;&lt;table&gt;&lt;tr&gt;&lt;td class=&quot;gutter&quot;&gt;&lt;pre&gt;&lt;span class=&quot;line&quot;&gt;1&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;2&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;3&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;4&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;5&lt;/span&gt;&lt;br&gt;&lt;/pre&gt;&lt;/td&gt;&lt;td class=&quot;code&quot;&gt;&lt;pre&gt;&lt;span class=&quot;line&quot;&gt;&lt;span class=&quot;meta&quot;&gt;#!/bin/bash&lt;/span&gt;&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;&lt;span class=&quot;comment&quot;&gt;# date2.sh &amp;lt; file.log&lt;/span&gt;&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;&lt;span class=&quot;keyword&quot;&gt;while&lt;/span&gt; &lt;span class=&quot;built_in&quot;&gt;read&lt;/span&gt; line; &lt;span class=&quot;keyword&quot;&gt;do&lt;/span&gt;&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;  date -j &lt;span class=&quot;_&quot;&gt;-f&lt;/span&gt; &lt;span class=&quot;string&quot;&gt;&quot;%Y-%m-%d %H:%M:%S&quot;&lt;/span&gt; &lt;span class=&quot;string&quot;&gt;&quot;&lt;span class=&quot;variable&quot;&gt;$line&lt;/span&gt;&quot;&lt;/span&gt; &lt;span class=&quot;string&quot;&gt;&quot;+%s&quot;&lt;/span&gt;&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;&lt;span class=&quot;keyword&quot;&gt;done&lt;/span&gt;;&lt;/span&gt;&lt;br&gt;&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;&lt;/figure&gt;
+&lt;h2 id=&quot;时间提前&quot;&gt;&lt;a href=&quot;#时间提前&quot; class=&quot;headerlink&quot; title=&quot;时间提前&quot;&gt;&lt;/a&gt;时间提前&lt;/h2&gt;&lt;p&gt;以下命令，将提取出的时间放在每行的行首。&lt;/p&gt;
+&lt;figure class=&quot;highlight bash&quot;&gt;&lt;table&gt;&lt;tr&gt;&lt;td class=&quot;gutter&quot;&gt;&lt;pre&gt;&lt;span class=&quot;line&quot;&gt;1&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;2&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;3&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;4&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;5&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;6&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;7&lt;/span&gt;&lt;br&gt;&lt;/pre&gt;&lt;/td&gt;&lt;td class=&quot;code&quot;&gt;&lt;pre&gt;&lt;span class=&quot;line&quot;&gt;&lt;span class=&quot;meta&quot;&gt;#!/bin/bash&lt;/span&gt;&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;&lt;span class=&quot;comment&quot;&gt;# timestamp.sh your.log&lt;/span&gt;&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;&lt;span class=&quot;keyword&quot;&gt;while&lt;/span&gt; &lt;span class=&quot;built_in&quot;&gt;read&lt;/span&gt; line; &lt;span class=&quot;keyword&quot;&gt;do&lt;/span&gt;&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;    &lt;span class=&quot;built_in&quot;&gt;echo&lt;/span&gt; &lt;span class=&quot;variable&quot;&gt;$line&lt;/span&gt; | sed &lt;span class=&quot;string&quot;&gt;&quot;s/.*\([0-9][0-9][0-9][0-9]-[0-9]*-[0-9]* [0-9]*:[0-9]*:[0-9]*\)\.[0-9]*;.*/\1/&quot;&lt;/span&gt; | ./date2.sh;&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;    &lt;span class=&quot;built_in&quot;&gt;echo&lt;/span&gt; &lt;span class=&quot;variable&quot;&gt;$line&lt;/span&gt;;&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;&lt;span class=&quot;keyword&quot;&gt;done&lt;/span&gt; | paste &lt;span class=&quot;_&quot;&gt;-s&lt;/span&gt; &lt;span class=&quot;_&quot;&gt;-d&lt;/span&gt; &lt;span class=&quot;string&quot;&gt;&#39; \n&#39;&lt;/span&gt;  - -&lt;/span&gt;&lt;br&gt;&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;&lt;/figure&gt;
+&lt;h2 id=&quot;时间段抽取&quot;&gt;&lt;a href=&quot;#时间段抽取&quot; class=&quot;headerlink&quot; title=&quot;时间段抽取&quot;&gt;&lt;/a&gt;时间段抽取&lt;/h2&gt;&lt;p&gt;采用&lt;code&gt;AWK&lt;/code&gt;抽取指定的时间段&lt;/p&gt;
+&lt;figure class=&quot;highlight bash&quot;&gt;&lt;table&gt;&lt;tr&gt;&lt;td class=&quot;gutter&quot;&gt;&lt;pre&gt;&lt;span class=&quot;line&quot;&gt;1&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;2&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;3&lt;/span&gt;&lt;br&gt;&lt;/pre&gt;&lt;/td&gt;&lt;td class=&quot;code&quot;&gt;&lt;pre&gt;&lt;span class=&quot;line&quot;&gt;&lt;span class=&quot;comment&quot;&gt;# 取&quot;2016-05-08 03:00:00&quot; 到 &quot;2016-05-08 04:00:00&quot;的日志&lt;/span&gt;&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;cat your.log | ./timestamp.sh | awk &lt;span class=&quot;string&quot;&gt;&#39;$1 &amp;gt;= &quot;1462647600&quot; &amp;amp;&amp;amp; $1 &amp;lt;= &quot;1462651200&quot; &amp;#123; print $0; &amp;#125;&#39;&lt;/span&gt;&lt;/span&gt;&lt;br&gt;&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;&lt;/figure&gt;
+</content>
+    
+    <summary type="html">
+    
+      &lt;p&gt;分析线上问题，需要取出一个时间段的日志，以下逐步给出一个脚本，取出一个时间段的日志。&lt;/p&gt;
+    
+    </summary>
+    
+    
+  </entry>
   
   <entry>
     <title>Hello World</title>
